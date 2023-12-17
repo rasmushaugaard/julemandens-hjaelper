@@ -1,19 +1,32 @@
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 import torchvision.models
 import pytorch_lightning as pl
 
 
+_modeller = dict(
+    lille=(torchvision.models.resnet18, torchvision.models.ResNet18_Weights.IMAGENET1K_V1, 512),
+    mellem=(torchvision.models.resnet34, torchvision.models.ResNet34_Weights.IMAGENET1K_V1, 512),
+    stor=(torchvision.models.resnet50, torchvision.models.ResNet50_Weights.IMAGENET1K_V2, 2048),
+    større=(torchvision.models.resnet101, torchvision.models.ResNet101_Weights.IMAGENET1K_V2, 2048),
+)
+
 class GaveModel(pl.LightningModule):
-    def __init__(self, lr=1e-3, pretrained=True, freeze=False, use_sched=True):
+    def __init__(self, lr=1e-3, pretrained=True, freeze=False, use_sched=True, størrelse='lille'):
         super().__init__()
         self.lr = lr
         self.use_sched = use_sched
-        self.model = torchvision.models.resnet18(
-            weights=torchvision.models.resnet.ResNet18_Weights.IMAGENET1K_V1 if pretrained else None,
+        
+        assert størrelse in _modeller, f"""
+            størrelse skal være én af følgende: {list(_modeller.keys())}
+        """
+
+        model, weights, ch = _modeller[størrelse]
+        self.model = model(
+            weights=weights if pretrained else None,
         )
-        self.model.fc = nn.Linear(512, 1)
+        self.model.fc = nn.Linear(ch, 1)
         if freeze:
             for module in list(self.model.children())[:6]:
                 for param in module.parameters():

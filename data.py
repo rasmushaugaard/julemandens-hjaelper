@@ -18,7 +18,7 @@ class GaveDatasæt(torch.utils.data.Dataset):
         if cache:
             # make sure images are cached before multiprocessing
             for i in range(len(self)):
-                self.load_anno(i)
+                self.load_anno(i)[0].load()
 
     def __len__(self):
         return self.n

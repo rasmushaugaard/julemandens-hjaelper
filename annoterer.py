@@ -6,19 +6,20 @@ import config
 
 class Annoterer:
     def __init__(self, image_folder=config.images_folder, 
-                 anno_fp=config.anno_fp, debug=False):
+                 anno_fp=config.anno_fp, debug=False, antal_totalt=500):
         self.anno_fp = anno_fp
         assert image_folder.is_dir()
         image_fps = set(image_folder.glob('*.jpg'))
         assert image_fps
-        self.n = len(image_fps)
         
         annotations = utils.load_annotations(anno_fp)
         image_fps_annotated = set((utils.img_fp_from_id(a[0]) for a in annotations))
         self.i = len(image_fps_annotated)
+        self.n = max(self.i, min(antal_totalt, len(image_fps)))
         
         image_fps_need_anno = image_fps - image_fps_annotated
-        self.image_fps = list(image_fps_annotated) + list(image_fps_need_anno)
+        self.image_fps = sorted(list(image_fps_annotated), key=str) + \
+                        sorted(list(image_fps_need_anno), key=str)
         
         self.label = widgets.Label(
             'Er julegaven ok?', 
@@ -108,3 +109,6 @@ class Annoterer:
         with self.anno_fp.open('a') as f:
             f.write(f'{img_id} {ok}\n')
         self.næste()
+
+def annoter(antal_billeder):
+    return Annoterer(antal_totalt=antal_billeder).widget
