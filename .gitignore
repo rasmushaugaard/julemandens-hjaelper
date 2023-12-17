@@ -1,0 +1,5 @@
+/annotations.txt
+/logs
+/images*
+/.ipynb_checkpoints
+/__pycache__
